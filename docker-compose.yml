@@ -1,6 +1,24 @@
 version: '2'
 
 services:
+  orders:
+    build:
+      context: .
+      dockerfile: ./apps/orders/Dockerfile
+      target: development
+    command: npm run start:dev orders
+    env_file:
+      - ./apps/orders/.env
+    depends_on:
+      - mongodb-primary
+      - mongodb-secondary
+      - mongodb-arbiter
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+
   mongodb-primary:
     image: docker.io/bitnami/mongodb:7.0
     environment:
@@ -8,10 +26,11 @@ services:
       - MONGODB_REPLICA_SET_MODE=primary
       - MONGODB_ROOT_PASSWORD=password123
       - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=rs0 #added later
     volumes:
       - 'mongodb_master_data:/bitnami/mongodb'
     ports:
-      - '27017:27017'  
+      - '27017:27017'
 
   mongodb-secondary:
     image: docker.io/bitnami/mongodb:7.0
@@ -23,6 +42,7 @@ services:
       - MONGODB_INITIAL_PRIMARY_HOST=mongodb-primary
       - MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD=password123
       - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=rs0 #added later
 
   mongodb-arbiter:
     image: docker.io/bitnami/mongodb:7.0
@@ -34,6 +54,7 @@ services:
       - MONGODB_INITIAL_PRIMARY_HOST=mongodb-primary
       - MONGODB_INITIAL_PRIMARY_ROOT_PASSWORD=password123
       - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=rs0 #added later
 
 volumes:
   mongodb_master_data:
